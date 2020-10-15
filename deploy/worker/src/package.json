@@ -1,0 +1,21 @@
+{
+  "name": "sample-order-system-worker",
+  "version": "1.0.0",
+  "description": "A module that periodically creates statistics regarding the orders.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "lint": "eslint . --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vassilis Barzokas <contact@vbarzokas.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bunyan": "^1.8.14",
+    "mongodb": "3.6.2"
+  },
+  "devDependencies": {
+    "eslint": "7.11.0",
+    "standard": "14.3.4"
+  }
+}

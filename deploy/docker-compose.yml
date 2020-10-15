@@ -1,0 +1,129 @@
+version: '3'
+
+services:
+  mongo-node-1:
+    hostname: mongo-node-1
+    image: ${MONGO_DB_IMAGE}
+    expose:
+      - 27017
+    ports:
+      - 27018:27017
+    restart: always
+    networks:
+      internal-network:
+        ipv4_address: 173.30.1.1
+    volumes:
+      - ./db/data/mongo-node-1:/data/db
+    entrypoint: ['/usr/bin/mongod', '--bind_ip_all', '--replSet', 'mongo-replicaset-0']
+
+  mongo-node-2:
+    hostname: mongo-node-2
+    image: ${MONGO_DB_IMAGE}
+    expose:
+      - 27017
+    ports:
+      - 27019:27017
+    restart: always
+    networks:
+      internal-network:
+        ipv4_address: 173.30.1.2
+    volumes:
+      - ./db/data/mongo-node-2:/data/db
+    depends_on:
+      - mongo-node-3
+    entrypoint: ['/usr/bin/mongod', '--bind_ip_all', '--replSet', 'mongo-replicaset-0']
+
+  mongo-node-3:
+    hostname: mongo-node-3
+    image: ${MONGO_DB_IMAGE}
+    expose:
+      - 27017
+    ports:
+      - 27020:27017
+    restart: always
+    networks:
+      internal-network:
+        ipv4_address: 173.30.1.3
+    volumes:
+      - ./db/data/mongo-node-3:/data/db
+    entrypoint: ['/usr/bin/mongod', '--bind_ip_all', '--replSet', 'mongo-replicaset-0']
+
+  mongo-cluster-setup:
+    image: ${MONGO_DB_IMAGE}
+    links:
+      - mongo-node-1:mongo-node-1
+      - mongo-node-2:mongo-node-2
+      - mongo-node-3:mongo-node-3
+    depends_on:
+      - mongo-node-1
+      - mongo-node-2
+      - mongo-node-3
+    volumes:
+      - ./db:/db
+    restart: 'no'
+    networks:
+      - internal-network
+    entrypoint: ['bash', '/db/setup.sh']
+
+  api-node:
+    environment:
+      - NODE=api-node
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+      - MONGO_REPLICA_SET=${MONGO_REPLICA_SET}
+      - WORKER_INTERVAL=${WORKER_INTERVAL}
+    build:
+      context: ./api
+      args:
+        NODE_IMAGE: ${NODE_IMAGE}
+        API_INTERNAL_PORT: ${API_INTERNAL_PORT}
+    networks:
+      - internal-network
+    volumes:
+      - ./api:/api
+    depends_on:
+      - mongo-cluster-setup
+
+  worker-node:
+    environment:
+      - NODE=worker-node
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+      - MONGO_REPLICA_SET=${MONGO_REPLICA_SET}
+      - WORKER_INTERVAL=${WORKER_INTERVAL}
+    build:
+      context: ./worker
+      args:
+        NODE_IMAGE: ${NODE_IMAGE}
+    networks:
+      - internal-network
+    volumes:
+      - ./worker:/worker
+    depends_on:
+      - api-node
+
+  nginx:
+    image: ${NGINX_IMAGE}
+    build:
+      context: ./nginx
+      args:
+        NGINX_IMAGE: ${NGINX_IMAGE}
+    restart: always
+    networks:
+      - internal-network
+    ports:
+      - 80:80
+    depends_on:
+      - api-node
+
+networks:
+  internal-network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 173.30.0.0/16
+
+volumes:
+  mongo-node-1:
+  mongo-node-2:
+  mongo-node-3:

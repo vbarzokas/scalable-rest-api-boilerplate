@@ -1,0 +1,20 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "An suite of automated tests for the sample REST API.",
+  "main": "",
+  "scripts": {
+    "test": "jest . --verbose --runInBand"
+  },
+  "author": "Vassilis Barzokas <contact@vbarzokas.com>",
+  "license": "MIT",
+  "dependencies": {
+    "await-sleep": "0.0.1",
+    "axios": "0.20.0",
+    "jest": "26.5.3",
+    "luxon": "^1.25.0",
+    "mongodb": "3.6.2",
+    "request-promise-native": "1.0.9",
+    "supertest": "5.0.0"
+  }
+}
