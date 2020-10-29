@@ -3,7 +3,7 @@
 cd ./deploy
 docker-compose down
 docker-compose build
-WORKER_INTERVAL=2000 docker-compose up -d
+docker-compose up -d
 
 sleep 30
 

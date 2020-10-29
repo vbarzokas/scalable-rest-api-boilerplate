@@ -71,7 +71,6 @@ services:
       - MONGO_URI=${MONGO_URI}
       - MONGO_DATABASE=${MONGO_DATABASE}
       - MONGO_REPLICA_SET=${MONGO_REPLICA_SET}
-      - WORKER_INTERVAL=${WORKER_INTERVAL}
     build:
       context: ./api
       args:
@@ -83,24 +82,6 @@ services:
       - ./api:/api
     depends_on:
       - mongo-cluster-setup
-
-  worker-node:
-    environment:
-      - NODE=worker-node
-      - MONGO_URI=${MONGO_URI}
-      - MONGO_DATABASE=${MONGO_DATABASE}
-      - MONGO_REPLICA_SET=${MONGO_REPLICA_SET}
-      - WORKER_INTERVAL=${WORKER_INTERVAL}
-    build:
-      context: ./worker
-      args:
-        NODE_IMAGE: ${NODE_IMAGE}
-    networks:
-      - internal-network
-    volumes:
-      - ./worker:/worker
-    depends_on:
-      - api-node
 
   nginx:
     image: ${NGINX_IMAGE}

@@ -11,10 +11,10 @@ The system consists of 3 layers, all running within docker containers and being 
 
 ## Folder structure
 * /deploy - Contains all the different parts required to build and deploy the application with `docker-compose`.
-    - /deploy/api/src - Contains the source code of the Node.js servers, among with the REST API and the Worker.
+    - /deploy/api/src - Contains the source code of the Node.js servers, among with the REST API.
     - /deploy/db - Contains the required scripts for setting up a MongoDB replica set.
     - /deploy/nginx - Contains the required configuration for the nginx load balancer.
-* /test - Contains the automated E2E suite that tests all the functionalities of the REST API and the Worker.    
+* /test - Contains the automated E2E suite that tests all the functionalities of the REST API.    
 
 ## Running
 ##### Prerequisites
@@ -45,14 +45,10 @@ The system consists of 3 layers, all running within docker containers and being 
         ```
         docker-compose up --scale api-node=5
         ```
-    - ***E2E Testing:*** In order to facilitate the automated testing as mentioned in the [Testing](#testing) section, you must change the interval time for the Worker module, which has a default value of 5 minutes. So you must bring up the containers by passing a 2 seconds interval to it:
-        ```
-        WORKER_INTERVAL=2000 docker-compose up
-        ```  
 * Wait until all the containers have started, usually takes about 20 seconds, but it depends on the resources of the host machine. After that the server should be accessible in port `80` of your local machine.
 ## Testing
 #### Automated Testing
-There is a set of E2E tests using Jest, that test all the functionalities of the REST API and also the Worker that fetches the statistics.
+There is a set of E2E tests using Jest, that test all the functionalities of the REST API.
 
 In order to run the tests follow these steps:
 ###### Automated
