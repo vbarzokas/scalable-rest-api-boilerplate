@@ -1,17 +1,13 @@
-const bunyan = require('bunyan');
-
 const config = require('./lib/config');
-const DB = require('./lib/db');
-const Server = require('./lib/server');
+const db = require('./lib/db');
+const server = require('./lib/server');
+const logger = require('./lib/logger');
 
-async function init () {
-  const logger = bunyan.createLogger({ name: 'Sample-Order-System-API' });
+async function init() {
+  logger.create();
 
-  const db = new DB(config.mongo, logger);
-  await db.connect();
-
-  const server = new Server(config.http, logger, db);
-  await server.start();
+  await db.connect(config.mongo);
+  await server.start(config.http);
 }
 
 init();

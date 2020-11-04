@@ -1,9 +1,15 @@
-const orders = require('./api/orders');
-const products = require('./api/products');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
-  mount: (router, db) => {
-    orders(router, db);
-    products(router, db);
+  mount: async (router) => {
+    const apiRoutesPath = path.resolve(__dirname, 'api');
+    const files = await fs.promises.readdir(apiRoutesPath);
+
+    files.forEach((fileName) => {
+      const route = require(path.resolve(apiRoutesPath, fileName));
+
+      route(router);
+    });
   }
 };

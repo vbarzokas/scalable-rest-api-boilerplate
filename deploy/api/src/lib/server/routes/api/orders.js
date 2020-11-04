@@ -1,8 +1,10 @@
 const _ = require('lodash');
 const statusCodes = require('http-status-codes');
+
+const db = require('../../../db');
 const ERRORS = require('../../../constants/errors');
 
-module.exports = (router, db) => {
+module.exports = (router) => {
   /**
    * @swagger
    * /orders:
@@ -36,7 +38,7 @@ module.exports = (router, db) => {
       return item.productId;
     });
 
-    const products = await db.models.Product
+    const products = await db.getModel('Product')
       .find()
       .where('_id')
       .in(productIds)
@@ -68,8 +70,9 @@ module.exports = (router, db) => {
       return accumulator + (product.productPrice * product.quantity);
     }, 0);
 
-    const orderModel = new db.models.Order(orderDetails);
-    const savedItem = await orderModel.save();
+    const OrderModel = db.getModel('Order');
+    const order = new OrderModel(orderDetails);
+    const savedItem = await order.save();
 
     return res.status(201).send({
       id: savedItem._id,
@@ -103,7 +106,7 @@ module.exports = (router, db) => {
    *         description: Internal server occurred while executing the request
    */
   router.get('/orders/:id', async (req, res) => {
-    const order = await db.models.Order.findById(req.params.id);
+    const order = await db.getModel('Order').findById(req.params.id);
 
     if (!order) {
       return res.status(404).send();

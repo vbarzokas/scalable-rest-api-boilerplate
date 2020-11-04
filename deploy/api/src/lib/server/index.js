@@ -2,15 +2,49 @@ const bodyParser = require('body-parser');
 const bunyanMiddleware = require('bunyan-middleware');
 const express = require('express');
 const nocache = require('nocache');
-const routes = require('./routes');
 const statusCodes = require('http-status-codes');
-const Swagger = require('./swagger');
 const swaggerExpressMiddleware = require('@apidevtools/swagger-express-middleware');
 
+const logger = require('../logger');
+const routes = require('./routes');
+const swagger = require('./swagger');
+
+function mountMiddlewares(serverInstance, config) {
+  serverInstance.use(bunyanMiddleware({ logger: logger.getInstance() }));
+  serverInstance.use(bodyParser.json());
+
+  swagger.init(config.swagger);
+  serverInstance.use('/api/docs', swagger.getRouter());
+
+  const swaggerMiddleware = swaggerExpressMiddleware(swagger.getSpec(), serverInstance);
+  serverInstance.use(
+    swaggerMiddleware.metadata(),
+    swaggerMiddleware.CORS(),
+    swaggerMiddleware.parseRequest(),
+    swaggerMiddleware.validateRequest()
+  );
+
+  serverInstance.use(nocache());
+
+  serverInstance.use((err, req, res, next) => {
+    delete err.stack;
+
+    res.status(err.status || statusCodes.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+  });
+}
+
+function mountRoutes(serverInstance) {
+  const router = express.Router();
+
+  routes.mount(router);
+  serverInstance.use('/api', router);
+}
+
 /**
- * Creates the HTTP server abstraction for communicating with the REST API.
+ * Creates the HTTP server abstraction for communicating with the REST API and
+ * listens for incoming requests.
  *
- * @class Server
+ * @function create
  * @param {Object} config Configuration object with structure:
  *
  *  {
@@ -18,54 +52,22 @@ const swaggerExpressMiddleware = require('@apidevtools/swagger-express-middlewar
  *    port: <Number> The target HTTP port to use.
  *    swagger: <Object> The configuration for the Swagger spec definition.
  *  }
- *
- * @param {Object} logger An instance of the Logger module.
- * @param {Object} db An instance of the DB module.
- * @constructor
+ * @returns {Object}
  */
-class Server {
-  constructor (config, logger, db) {
-    this._config = config;
-    this._logger = logger;
-    this._db = db;
-    this._instance = express();
-    this._router = express.Router();
-  }
+async function start(config) {
+  const log = logger.getInstance();
+  const instance = express();
 
-  /**
-   * Starts the HTTP server and listens for incoming requests.
-   *
-   * @method start
-   * @returns {Promise}
-   */
-  async start () {
-    this._instance.use(bunyanMiddleware({ logger: this._logger }));
-    this._instance.use(bodyParser.json());
+  mountMiddlewares(instance, config);
+  mountRoutes(instance);
 
-    const swagger = new Swagger(this._config.swagger);
-    this._instance.use('/api/docs', swagger.router);
+  await instance.listen(config.port);
 
-    const swaggerMiddleware = swaggerExpressMiddleware(swagger.spec, this._instance);
-    this._instance.use(
-      swaggerMiddleware.metadata(),
-      swaggerMiddleware.CORS(),
-      swaggerMiddleware.parseRequest(),
-      swaggerMiddleware.validateRequest()
-    );
+  log.info(`Server running and listening at port ${config.port}`);
 
-    routes.mount(this._router, this._db);
-    this._instance.use('/api', this._router);
-
-    this._instance.use(nocache());
-
-    this._instance.use((err, req, res, next) => {
-      delete err.stack;
-
-      res.status(err.status || statusCodes.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
-    });
-
-    return this._instance.listen(this._config.port, () => this._logger.info('Server is running!'));
-  }
+  return instance;
 }
 
-module.exports = Server;
+module.exports = {
+  start
+};

@@ -2,23 +2,36 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJSDoc = require('swagger-jsdoc');
 
+let spec;
+let router;
+
 /**
  * Creates the Swagger abstraction layer.
  *
- * @class Swagger
+ * @function init
  * @param {Object} config Configuration object for the module `swagger-jsdoc`.
- * @constructor
  */
-class Swagger {
-  constructor (config) {
-    this.spec = swaggerJSDoc(config);
-    this.router = express.Router();
+function init(config) {
+  spec = swaggerJSDoc(config);
+  router = express.Router();
 
-    this.router.use('/', swaggerUi.serve, swaggerUi.setup(this.spec));
-    this.router.get('/json', function (req, res) {
-      res.setHeader('Content-Type', 'application/json');
-      res.send(this.spec);
-    });
-  }
+  router.use('/', swaggerUi.serve, swaggerUi.setup(spec));
+  router.get('/json', function (req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(spec);
+  });
 }
-module.exports = Swagger;
+
+function getRouter() {
+  return router;
+}
+
+function getSpec() {
+  return spec;
+}
+
+module.exports = {
+  init,
+  getRouter,
+  getSpec
+};

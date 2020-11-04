@@ -1,4 +1,6 @@
-module.exports = (router, db) => {
+const db = require('../../../db');
+
+module.exports = (router) => {
   /**
    * @swagger
    * /products:
@@ -26,7 +28,8 @@ module.exports = (router, db) => {
    *         description: Internal server occurred while executing the request
    */
   router.post('/products', async (req, res) => {
-    const product = new db.models.Product(req.body);
+    const ProductModel = db.getModel('Product');
+    const product = new ProductModel(req.body);
     const savedItem = await product.save();
 
     return res.status(201).send({
@@ -53,7 +56,7 @@ module.exports = (router, db) => {
    *         description: Internal server occurred while executing the request
    */
   router.get('/products', async (req, res) => {
-    const products = await db.models.Product.find({});
+    const products = await db.getModel('Product').find({});
 
     return res.send(products);
   });
