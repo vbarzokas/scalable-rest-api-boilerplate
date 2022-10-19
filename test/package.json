@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "await-sleep": "0.0.1",
-    "axios": "0.21.1",
+    "axios": "0.21.2",
     "jest": "26.5.3",
     "luxon": "^1.25.0",
     "mongodb": "3.6.2",
